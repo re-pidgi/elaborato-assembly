@@ -3,9 +3,9 @@
 
 
 leggi_file
-    siscallleggifile
+    syscallleggifile ##########
 
-    array len 4field * 10prod * 8byte
+    array len 4field * 10prod * 1byte
 
     read_integer dentro ad array
     aumenta array di 1
@@ -18,7 +18,6 @@ read_integer
     leggi 1 carattere da file pointer
     se carattere è numero moltiplica ACC per 10 e aggiungi il numero
     restituisci ACC
-
 
 menu
     output prompt scelta algoritmo
