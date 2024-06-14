@@ -7,18 +7,19 @@ menu_prompt_len:
     .long . - menu_prompt
 
 scelta:
-	.ascii "00"
+    .ascii "00"
 scelta_len:
-	.long . - scelta 
+    .long . - scelta 
 
 num_int:
-	.long 0
+    .long 0
 
 .section .text
-    .global _start
+    .global menu
 
-_start:
-stampa_richiesta:
+.type menu, @function
+
+menu:
     movl $4, %eax
     movl $1, %ebx
     leal menu_prompt, %ecx
@@ -33,20 +34,18 @@ scanf:
     int $0x80 
 
 converti:
-	leal scelta, %esi 
-	xorl %eax, %eax
-	xorl %ebx, %ebx
-	xorl %ecx, %ecx
-	xorl %edx, %edx
+    leal scelta, %esi 
+    xorl %eax, %eax
+    xorl %ebx, %ebx
+    xorl %ecx, %ecx
+    xorl %edx, %edx
 
-	movb (%ecx,%esi,1), %bl
-	subb $48, %bl 
-	movl $10, %edx 
-	mulb %dl 
-	addl %ebx, %eax
+    movb (%ecx,%esi,1), %bl
+    subb $49, %bl 
+    movl $10, %edx 
+    mulb %dl 
+    addl %ebx, %eax
 
-	movl %eax, num_int
+    movl %eax, scelta
 
-fine:
-	movl $1, %eax
-	int $0x80
+    ret
