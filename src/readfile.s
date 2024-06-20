@@ -1,25 +1,34 @@
 .section .data
-    .global number_array
+#    .global number_array
 
-filename: .string "/home/pg/Documents/progettoassembly/elaborato-assembly/bin/ordini.txt"
+#filename: .string "/home/pg/Documents/progettoassembly/elaborato-assembly/bin/ordini.txt"
 fd: .int 0
 buffer: .fill 132 # len "ddd,dd,ddd,d\n" * 10 +EOF?+EOF
-number_array: .fill 40
+#number_array: .fill 40
 ten: .byte 10
 
-.section .text
-    .global _start
+expected_digit_msg: .string "il file contiene un carattere sconosciuto"
+expected_digit_len: .long - expected_digit_msg
 
-_start:
+.section .text
+.global read_file
+.type read_file, @function
+    # (ebx: *filename, edi: *num_array) -> [
+    #   eax: ret_type (0 normale, -X errore lettura)
+    #   bl: last_char_read
+    #   exc: char_read_qty
+    #   edx: nums_converted ]
+
+read_file:
     # syscall open(filename, readonly) -> [eax: fd] 
     mov $5, %eax
-    leal filename, %ebx
+    # leal filename, %ebx
     mov $0, %ecx
     int $0x80
 
-    # IF eax == (NULL | error) { exit }
+    # IF eax == (NULL | error) { return }
     cmp $0, %eax
-    jl _exit
+    jl return
 
     # fd = eax
     mov %eax, fd
@@ -43,9 +52,8 @@ _start:
     mov $0, %eax
 
     leal buffer, %esi
-    leal number_array, %edi
 
-_for_each_char:
+for_each_char:
     # bl = char[c]
     movb (%esi,%ecx,1), %bl
     # c += 1
@@ -54,49 +62,45 @@ _for_each_char:
     # IF bl == (',' | '\n' | EOF) { next_array_pos }
     # il 132esimo e' assicurato essere 0 perche' ne leggo 131
     cmpb $44, %bl
-    je _next_array_pos
+    je next_array_pos
     cmpb $10, %bl
-    je _next_array_pos
+    je next_array_pos
     cmpb $0, %bl
-    je _next_array_pos
+    je next_array_pos
 
     # IF (!bl.is_digit) { panic }
     sub $48, %bl
     cmpb $10, %bl
-    jge _panic
+    jae expected_digit
 
     # al *= 10
     mulb ten
     addb %bl, %al
 
-    jmp _for_each_char
+    jmp for_each_char
 
-_next_array_pos:
+next_array_pos:
     # number[i] = al
     movb %al, (%edi,%edx,1)
 
-    cmp $40, %edx
-    je _exit
-    cmp $0, %bl
-    je _exit
-
     # reset eax
-    mov $0, %eax
+    xor %eax, %eax
     # i += 1
     incl %edx
 
-    jmp _for_each_char
+    cmp $40, %edx
+    je return
+    cmp $0, %bl
+    je return
 
+    jmp for_each_char
 
-_exit:
-    # syscall exit (0)
-    mov $1, %eax
-    xor %ebx, %ebx
+return:
+    ret
+
+expected_digit:
+    movl $4, %eax
+    movl $1, %ebx
+    leal expected_digit_msg, %ecx
+    movl expected_digit_len, %edx
     int $0x80
-
-_panic:
-    # syscall exit (1)
-    mov $1, %eax
-    mov $1, %ebx
-    int $0x80
-
