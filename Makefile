@@ -1,18 +1,25 @@
-AS_FLAGS = --32 
+EXE = bin/eseguibile
+AS = as --32
+LD = ld -m elf_i386
 DEBUG = -gstabs
-LD_FLAGS = -m elf_i386
+OBJ = obj/main.o obj/menu.o obj/order.o obj/readfile.o
 
-all: bin/menu
 
-bin/menu: obj/main.o obj/menu.o
-	ld $(LD_FLAGS) obj/main.o obj/menu.o -o bin/menu
+start: clean_obj $(OBJ)
+	$(LD) -o start $(OBJ)
+	mv start $(EXE)
 
 obj/main.o: src/main.s
-	as $(AS_FLAGS) $(DEBUG) src/main.s -o obj/main.o
+	$(AS) $(DEBUG) -o obj/main.o src/main.s
 
 obj/menu.o: src/menu.s
-	as $(AS_FLAGS) $(DEBUG) src/menu.s -o obj/menu.o
+	$(AS) $(DEBUG) -o obj/menu.o src/menu.s
 
+obj/order.o: src/order.s
+	$(AS) $(DEBUG) -o obj/order.o src/order.s
 
-clean:
-	rm -f obj/*.o bin/menu
+obj/readfile.o: src/readfile.s
+	$(AS) $(DEBUG) -o obj/readfile.o src/readfile.s
+
+clean_obj:
+	rm -f $(OBJ)
