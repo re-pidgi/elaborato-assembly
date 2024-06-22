@@ -7,19 +7,24 @@ buffer: .fill 132 # len "ddd,dd,ddd,d\n" * 10 +EOF?+EOF
 #number_array: .fill 40
 ten: .byte 10
 
-expected_digit_msg: .string "il file contiene un carattere sconosciuto"
-expected_digit_len: .long - expected_digit_msg
+expected_digit_msg: .string "il file contiene un carattere sconosciuto\n"
+expected_digit_len: .long . - expected_digit_msg
+
+too_many_nums_msg: .string "il file contiene troppi numeri\n"
+too_many_nums_len: .long . - expected_digit_msg
 
 .section .text
 .global read_file
 .type read_file, @function
-    # (ebx: *filename, edi: *num_array) -> [
+    # (ebx: *filename, edi: *number_array) -> [
     #   eax: ret_type (0 normale, -X errore lettura)
     #   bl: last_char_read
     #   exc: char_read_qty
     #   edx: nums_converted ]
 
 read_file:
+    # TODO: SALVARE I REGISTRI SULLO STACK PERCHÉ BEST (only) PRACTICE 
+
     # syscall open(filename, readonly) -> [eax: fd] 
     mov $5, %eax
     # leal filename, %ebx
@@ -80,6 +85,9 @@ for_each_char:
     jmp for_each_char
 
 next_array_pos:
+    cmp $40, %edx
+    je too_many_nums
+
     # number[i] = al
     movb %al, (%edi,%edx,1)
 
@@ -98,9 +106,19 @@ next_array_pos:
 return:
     ret
 
+too_many_nums:
+    movl $4, %eax
+    movl $1, %ebx
+    leal too_many_nums_msg, %ecx
+    movl too_many_nums_len, %edx
+    int $0x80
+    call panic
+
 expected_digit:
     movl $4, %eax
     movl $1, %ebx
     leal expected_digit_msg, %ecx
     movl expected_digit_len, %edx
     int $0x80
+
+    call panic
