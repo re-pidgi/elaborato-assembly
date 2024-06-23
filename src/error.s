@@ -15,6 +15,10 @@ expected_digit_len: .int . - expected_digit_msg
 too_many_nums_msg: .string "il file contiene troppi numeri\n"
 too_many_nums_len: .int . - expected_digit_msg
 
+number_out_of_bounds_msg: .string "il file contiene un numero fuori dai limiti consentiti\n"
+number_out_of_bounds_len: .int . - number_out_of_bounds_msg
+
+
 .section .text
 	.global panic
 	.global err_too_many_args
@@ -22,7 +26,7 @@ too_many_nums_len: .int . - expected_digit_msg
 	.global err_bad_nums_count
 	.global err_expected_digit
 	.global err_too_many_nums
-
+    .global err_number_out_of_bounds
 
 err_bad_nums_count:
     leal bad_nums_count_msg, %ecx
@@ -47,6 +51,11 @@ err_too_many_nums:
 err_expected_digit:
     leal expected_digit_msg, %ecx
     movl expected_digit_len, %edx
+    jmp print_error
+
+err_number_out_of_bounds:
+    leal number_out_of_bounds_msg, %ecx
+    movl number_out_of_bounds_len, %edx
     jmp print_error
 
 print_error:

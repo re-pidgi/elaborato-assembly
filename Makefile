@@ -2,7 +2,7 @@ EXE = bin/eseguibile
 AS = as --32
 LD = ld -m elf_i386
 DEBUG = -gstabs
-OBJ = obj/main.o obj/menu.o obj/order.o obj/file.o obj/error.o
+OBJ = obj/main.o obj/menu.o obj/order.o obj/file.o obj/error.o obj/print.o
 
 
 start: clean_obj $(OBJ)

@@ -13,11 +13,12 @@
 .type rotate_by, @function
 
 order:
+	xorl %ecx, %ecx
+	
 	# selettore algoritmo (0: scadenza, 1: priorità)
 	cmp $0, %al
 	jne order_by_priority
 
-	xorl %ecx, %ecx
 
 
 	# sort utilizza %al come chiave di sorting per due elementi

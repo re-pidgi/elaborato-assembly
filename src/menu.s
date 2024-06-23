@@ -1,9 +1,9 @@
 .section .data
 
-menu_prompt: .ascii "decidi l'ordine da usare. (1: EDF (scadenza), 2: HPF (priorità), altro: EXIT):" 
+menu_prompt: .ascii "decidi l'ordine da usare. (1: EDF (scadenza), 2: HPF (priorità), altro: EXIT): " 
 menu_prompt_len: .long . - menu_prompt
 
-choice_buffer: .fill 2
+choice_buffer: .fill 10
 
 .section .text
     .global menu
@@ -19,7 +19,7 @@ menu:
     movl menu_prompt_len, %edx
     int $0x80
 
-    # input carattere
+    # input di due caratteri
     movl $3, %eax
     movl $0, %ebx
     leal choice_buffer, %ecx
@@ -28,7 +28,7 @@ menu:
 
     # controlla che sia un solo carattere + newline
 
-    # controlla se è altro rispetto a 1 o 2
+    # controlla se è altro rispetto a "1\n" o "2\n"
     movw choice_buffer, %ax
     cmp $10, %ah
     jne exit
@@ -39,7 +39,7 @@ menu:
 
     xorb %ah, %ah
 
-    # converti a 0 o 1
+    # converti "1" o "2" a 0 o 1
     sub $49, %al
 
     ret

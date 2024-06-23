@@ -18,7 +18,7 @@ output_file_name: .int 0
     .global panic
     .global exit
 
-_start:    
+_start:
     # salva il puntatore allo stack
     movl %esp, %ebp
 
@@ -52,7 +52,6 @@ no_output_file:
     leal number_array, %edi
     call read_file
 
-
     # controlla che siano multipli di 4
     movl %edx, %ecx
     andl $3, %edx
@@ -63,17 +62,21 @@ no_output_file:
     shr $2, %ecx
     movl %ecx, len
 
+    # controllo i limiti
+    movl len, %edx
+    call check_bounds
+
 sort_selection:
     # input del selettore
     # () -> [ al: selettore (0: scadenza, 1: priorità) ]
     call menu
     movb %al, choice
 
+    # serve in caso di iterazioni ulteriori perché edi viene cambiato più avanti
     leal number_array, %edi
+
     # <len>(al: selettore, edi: *number_array) -> [  ]
     call order
-
-    # TODO calcoli
 
     # moltiplico len * 4 perché non posso fare
     # indirizzamento indicizzato con moltiplicatore
@@ -156,7 +159,7 @@ for_each_product_exit:
 
     xorl %ebx, %ebx
 
-    # TODO PRINT
+    # salvo TOTTIME e TOTPENALTY in ebx 
     movw %di, %bx
     roll $16, %ebx 
     movw %si, %bx
