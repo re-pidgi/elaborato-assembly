@@ -13,16 +13,6 @@
 .type rotate_by, @function
 
 order:
-/*
-	# movl $8, %ecx
-	# call rotate_by
-	# call sort
-
-	call reverse
-
-	ret
-*/
-
 	# selettore algoritmo (0: scadenza, 1: priorità)
 	cmp $0, %al
 	jne order_by_priority

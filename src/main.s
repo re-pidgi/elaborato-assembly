@@ -1,20 +1,17 @@
 .section .data
 
-too_many_args_msg: .string "troppi parametri\n"
-too_many_args_len: .long . - too_many_args_msg
-
-no_filename_msg: .string "nessun file specificato\n"
-no_filename_len: .long . - no_filename_msg
-
-bad_nums_count_msg: .string "quantita' di numeri errata"
-bad_nums_count_len: .long . - bad_nums_count_msg
-
-
 number_array: .fill 40
 
-len: .int 0
+output_array: .fill 40
 
+len: .int 0
 .global len
+
+choice: .byte 0
+.global choice
+
+output_file_name: .int 0
+.global output_file_name
 
 .section .text
     .global _start
@@ -28,12 +25,20 @@ _start:
     # quanti parametri ci sono?
     movl (%esp), %eax
 
-    # se non sono 2 o 3 panica
+    # se non sono 2 o 3 manda a errore
     cmp $2, %eax
-    jb no_filename
+    jb err_no_filename
+    cmp $2, %eax
+    je no_output_file
     cmp $3, %eax
-    ja too_many_args
+    ja err_too_many_args
 
+    addl $12, %esp
+    movl (%esp), %eax
+    movl %eax, output_file_name
+    subl $12, %esp
+
+no_output_file:
     # prossimo valore sullo stack
     # assicurato per i controlli sopra
     addl $8, %esp
@@ -47,13 +52,14 @@ _start:
     leal number_array, %edi
     call read_file
 
+
     # controlla che siano multipli di 4
     movl %edx, %ecx
     andl $3, %edx
     cmp $0, %edx
-    jne bad_nums_count
+    jne err_bad_nums_count
 
-    # diviso 4 e salvo
+    # divido per 4 la quantità di numeri e salvo la lunghezza
     shr $2, %ecx
     movl %ecx, len
 
@@ -61,43 +67,104 @@ sort_selection:
     # input del selettore
     # () -> [ al: selettore (0: scadenza, 1: priorità) ]
     call menu
+    movb %al, choice
 
+    leal number_array, %edi
     # <len>(al: selettore, edi: *number_array) -> [  ]
     call order
 
     # TODO calcoli
-    nop
+
+    # moltiplico len * 4 perché non posso fare
+    # indirizzamento indicizzato con moltiplicatore
+    # perché uso tutti i registri per altre cose
+    # vagamente più necessarie
+    movl len, %eax
+    shl $2, %eax
+    movl %eax, len
+
+    xor %ecx, %ecx
+    xor %eax, %eax
+    xor %ebx, %ebx
+    xor %edx, %edx
+    xor %esi, %esi
+    xor %edi, %edi
+    # eax calcolo penalità
+    # ebx oggetto corrente
+    # ecx index all'array
+    # edx formato output (ID:INIZIO)
+    # esi tempo corrente
+    # edi somma penalità
+
+for_each_product:
+    # se ho già fatto tutti gli elementi
+    movl len, %eax
+    cmpb %cl, %al
+    je for_each_product_exit
+
+    # carica il prodotto in ebx
+    mov number_array(%ecx), %ebx
+
+    # sposta l'ID e copia INIZIO in edx
+    # salva nell'array per gli output
+    mov %si, %dx
+    rorl $16, %edx
+    movb %bl, %dl
+    xor %bl, %bl
+    mov %edx, output_array(%ecx)
+
+    # TIME in bl e SCAD in bh
+    rorl $8, %ebx
+
+    # aggiungi TIME al TOTTIME e cancella bl
+    mov %bl, %al
+    add %ax, %si
+    xor %bl, %bl
+
+    # SCAD in bx
+    rorw $8, %bx
+
+    # compara TOTTIME con SCAD
+    cmp %si, %bx
+    # se è SCAD minore di TOTTIME calcola penale
+    # ergo se SCAD maggiore o uguale salta il calcolo
+    jae no_penalty
+
+    # sposta in TOTTIME in ax
+    mov %si, %ax
+    # calcola il DELTATIME
+    sub %bx, %ax
+    # moltiplicalo per PRIORITY
+    rorl $16, %ebx
+    mul %bx
+    # aggiungi la penale a TOTPENALTY
+    rorl $16, %edx
+    mov %ax, %dx
+    add %edx, %edi
+
+no_penalty:
+    # vai al prossimo elemento
+    # guarda sopra come mai non posso usare incl %ecx
+    addl $4, %ecx
+
+    jmp for_each_product
+
+for_each_product_exit:
+    movl len, %eax
+    shr $2, %eax
+    movl %eax, len
+
+    xorl %ebx, %ebx
+
+    # TODO PRINT
+    movw %di, %bx
+    roll $16, %ebx 
+    movw %si, %bx
+
+    leal output_array, %esi
+    call print_report
 
     jmp sort_selection
-
-bad_nums_count:
-    movl $4, %eax
-    movl $1, %ebx
-    leal bad_nums_count_msg, %ecx
-    movl bad_nums_count_len, %edx
-    int $0x80
-    jmp panic
-
-too_many_args:
-    movl $4, %eax
-    movl $1, %ebx
-    leal too_many_args_msg, %ecx
-    movl too_many_args_len, %edx
-    int $0x80
-    jmp panic
-
-no_filename:
-    movl $4, %eax
-    movl $1, %ebx
-    leal no_filename_msg, %ecx
-    movl no_filename_len, %edx
-    int $0x80
-
-panic:
-    # syscall exit (1)
-    mov $1, %eax
-    mov $1, %ebx
-    int $0x80
 
 exit:
     # syscall exit (0)
