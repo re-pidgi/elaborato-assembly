@@ -6,7 +6,7 @@ too_many_args_len: .int . - too_many_args_msg
 no_filename_msg: .string "nessun file specificato\n"
 no_filename_len: .int . - no_filename_msg
 
-bad_nums_count_msg: .string "quantita' di numeri errata"
+bad_nums_count_msg: .string "quantita' di numeri errata\n"
 bad_nums_count_len: .int . - bad_nums_count_msg
 
 expected_digit_msg: .string "il file contiene un carattere sconosciuto\n"
