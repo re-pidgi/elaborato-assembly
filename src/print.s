@@ -42,6 +42,7 @@ print_report:
 
     leal edf_order_msg, %ebx
     movl edf_order_len, %ecx
+    jmp print_intro
 
 load_hpf_intro:
     leal hpf_order_msg, %ebx

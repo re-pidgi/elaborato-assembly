@@ -100,7 +100,7 @@ inner_loop:
 	movl (%edi,%ecx,4), %ebx
 
 	cmpb %bl, %al
-	jb dont_swap
+	jbe dont_swap
 
 	# swap
 	# arr[j+1] = eax
